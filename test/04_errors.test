@@ -1,0 +1,22 @@
+sail Volga
+add Volga
+add Volga abc 15000 cargo
+add Volga 12000 15t cargo
+add Volga 0 15000 cargo
+add Volga -100 15000 cargo
+add Volga 12000 11000 cargo
+add Volga 12000 15000 boat
+add Volga 12000 15000 Cargo
+add Volga 12000 15000 cargo
+add Volga 5000 6000 tanker
+remove
+remove Volga Neva
+update Volga 100
+update Volga x 1000
+update Volga 0 1000
+update Volga 2000 1000
+update Neva 0 1000
+save
+load
+view
+exit

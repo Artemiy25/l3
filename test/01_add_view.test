@@ -1,0 +1,6 @@
+view
+add Volga 12000 15000 cargo
+add Baltica 50000 62000 tanker
+add Neva 3000 4500 cruise
+view
+exit

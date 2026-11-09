@@ -1,0 +1,36 @@
+add Volga 12000 15000 cargo
+add Neva 3000 4500 cruise
+add Ob 8000 9000 tanker
+move
+move Volga 1
+move Volga x 1
+move Volga 1 1.5
+move Titanic 1 1
+sos
+sos 1
+sos x Volga
+sos 0 Volga
+sos 1 Titanic
+sos 1 Volga
+move Volga 0 0
+sos 1 Volga
+sos 2 Volga
+nearest
+nearest x
+nearest 9
+nearest 1
+close
+close x
+close 9
+close 1
+move Neva 5 5
+sos 1 Neva
+nearest 1
+close 1
+close 1
+nearest 1
+sos 2 Volga
+sos 3 Neva
+nearest 3
+signals
+exit

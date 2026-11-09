@@ -1,0 +1,40 @@
+#!/bin/bash
+# Автотесты.
+# Для каждого входного файла test/NN_имя.test запускаем программу
+# и сравниваем её вывод с эталоном test/NN_имя.expected.
+# Если хотя бы один тест не прошёл - скрипт завершается с кодом 1,
+# и сценарий CI считается неуспешным.
+
+n_failed=0
+
+# Удаляем файлы, оставшиеся от прошлого запуска тестов
+rm -f build/*.data
+
+# Сравнить эталон $1 с результатом $2, $3 - название теста
+check()
+{
+    if diff "$1" "$2" > /dev/null
+    then
+        echo "OK      $3"
+    else
+        echo "ОШИБКА  $3"
+        diff "$1" "$2"
+        n_failed=$((n_failed + 1))
+    fi
+}
+
+for test_file in test/*.test
+do
+    name=${test_file%.test}        # test/01_add_view.test -> test/01_add_view
+    bin/lab < "$test_file" > "$name.result"
+    check "$name.expected" "$name.result" "$test_file"
+done
+
+if [ $n_failed -ne 0 ]
+then
+    echo "Не прошло тестов: $n_failed"
+    exit 1
+fi
+
+echo "Все тесты прошли успешно"
+exit 0

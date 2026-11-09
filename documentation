@@ -1,0 +1,3 @@
+#!/bin/bash
+# Формирование документации по исходному коду в каталоге doc/html
+doxygen doc/Doxyfile.cfg

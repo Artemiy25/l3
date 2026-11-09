@@ -1,0 +1,40 @@
+# Шаблоны команд для генератора нагрузочных тестов (bin/stressgen).
+# Одна строка - один шаблон. Чем чаще шаблон повторяется, тем чаще
+# генерируется такая команда.
+# Несколько команд через " | " - сценарий, они выводятся друг за другом.
+# Подстановки: {ship} {tonnage} {type} {coord} {newsignal} {lastsignal} {signal}
+# (см. src/stressgen/stressgen.cpp)
+
+# Список наблюдаемых судов
+add {ship} {tonnage} {tonnage} {type}
+add {ship} {tonnage} {tonnage} {type}
+add {ship} {tonnage} {tonnage} {type}
+update {ship} {tonnage} {tonnage}
+update {ship} {tonnage} {tonnage}
+remove {ship}
+view
+
+# Координаты судов
+move {ship} {coord} {coord}
+move {ship} {coord} {coord}
+move {ship} {coord} {coord}
+move {ship} {coord} {coord}
+
+# Сценарии спасения: SOS -> поиск трёх ближайших судов -> завершение
+sos {newsignal} {ship} | nearest {lastsignal} | close {lastsignal}
+sos {newsignal} {ship} | nearest {lastsignal} | close {lastsignal}
+sos {newsignal} {ship} | nearest {lastsignal} | move {ship} {coord} {coord} | nearest {lastsignal} | close {lastsignal}
+sos {newsignal} {ship} | nearest {lastsignal} | signals | close {lastsignal}
+
+# Отдельные команды по недавним сигналам (часто - уже закрытым)
+nearest {signal}
+close {signal}
+signals
+
+# Команды с ошибками: программа должна ответить сообщением, а не упасть
+add {ship} abc {tonnage} {type}
+add {ship} {tonnage} {tonnage} boat
+move {ship} north {coord}
+sos 0 {ship}
+sos {signal} {ship}
+nearest abc

@@ -1,0 +1,58 @@
+#!/bin/bash
+# Нагрузочный тест (ЛР3).
+#
+# 1. Генератор bin/stressgen по шаблонам test/stress/templates.txt
+#    создаёт большой файл со случайными командами.
+# 2. Программа bin/lab выполняет все эти команды.
+# 3. Проверяем:
+#    - программа не упала (код возврата 0; если нарушится инвариант,
+#      assert аварийно завершит программу);
+#    - время работы не больше допустимого;
+#    - в выводе нет "Неизвестная команда" (генератор и программа согласованы).
+#
+# Запуск: test/stress-test [количество команд] [допустимое время, мс]
+
+N_COMMANDS=${1:-50000}
+TIME_LIMIT_MS=${2:-30000}
+SEED=2025
+
+mkdir -p build
+bin/stressgen test/stress/templates.txt $N_COMMANDS $SEED > build/stress.test || exit 1
+
+start=$(date +%s%N)
+bin/lab < build/stress.test > build/stress.result
+exit_code=$?
+end=$(date +%s%N)
+
+time_ms=$(( (end - start) / 1000000 ))
+
+echo "Команд: $N_COMMANDS"
+echo "Время выполнения: $time_ms мс (допустимо: $TIME_LIMIT_MS мс)"
+
+failed=0
+
+if [ $exit_code -ne 0 ]
+then
+    echo "ОШИБКА: программа завершилась аварийно (код $exit_code)"
+    failed=1
+fi
+
+if [ $time_ms -gt $TIME_LIMIT_MS ]
+then
+    echo "ОШИБКА: превышено допустимое время работы"
+    failed=1
+fi
+
+if grep -q "Неизвестная команда" build/stress.result
+then
+    echo "ОШИБКА: в выводе есть неизвестные команды"
+    failed=1
+fi
+
+if [ $failed -ne 0 ]
+then
+    exit 1
+fi
+
+echo "Нагрузочный тест пройден"
+exit 0

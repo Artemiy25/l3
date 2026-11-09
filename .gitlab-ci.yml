@@ -1,0 +1,66 @@
+# Сценарий непрерывной интеграции (CI) лабораторной работы №3.
+# Выполняется на сервере GitLab в Docker-контейнере с Ubuntu 20.04
+# после каждого git push.
+
+image: ubuntu:20.04
+
+stages:
+  - compile    # сборка
+  - test       # автотесты
+  - delivery   # документация и покрытие -> GitLab Pages
+
+# Выполняется перед каждой задачей
+before_script:
+  - export DEBIAN_FRONTEND=noninteractive
+  - export TZ=Europe/Moscow
+  - apt-get -y update
+
+# 1. Сборка программы
+build-code:
+  stage: compile
+  script:
+    - apt-get -y install g++ make
+    - bash configure
+    - make
+  artifacts:          # готовую программу передаём в следующий этап
+    paths:
+      - bin/lab
+      - bin/stressgen
+    expire_in: 30 minutes
+
+# 2. Автотесты (если хоть один не прошёл - сценарий упадёт)
+test-all:
+  stage: test
+  script:
+    - bash configure
+    - bash test/run-tests
+
+# 2а. Нагрузочный тест (ЛР3): 50000 случайных команд, лимит времени 30 с
+stress-test:
+  stage: test
+  script:
+    - bash configure
+    - bash test/stress-test 50000 30000
+
+# 3. Документация Doxygen и отчёт о покрытии кода тестами
+pages:
+  stage: delivery
+  script:
+    - apt-get -y install g++ make doxygen graphviz lcov
+    - doxygen doc/Doxyfile.cfg
+    - bash configure
+    - make
+    - bash test/run-tests
+    # Считаем покрытие только по нашим файлам (--no-external)
+    - lcov -t "lab" -o lab.info -c -d . --no-external
+    - genhtml -o coverage lab.info
+    - mv doc/html/ public/
+    - mv coverage/ public/coverage/
+  # Регулярное выражение, по которому GitLab находит процент покрытия в выводе
+  coverage: '/^\s*lines\.*:\s+\d+\.\d+%/'
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+    - master

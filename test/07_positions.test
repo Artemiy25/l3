@@ -1,0 +1,16 @@
+add Volga 12000 15000 cargo
+add Neva 3000 4500 cruise
+view
+move Volga 10 -5
+move Volga 12 -6
+update Volga 13000 16000
+view
+save build/positions.data
+remove Volga
+move Neva 0 0
+load build/positions.data
+view
+load test/broken_position.data
+load test/broken_coords.data
+view
+exit

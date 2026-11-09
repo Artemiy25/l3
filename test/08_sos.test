@@ -1,0 +1,26 @@
+add Volga 12000 15000 cargo
+add Neva 3000 4500 cruise
+add Ob 8000 9000 tanker
+add Baltica 50000 62000 tanker
+add Lena 7000 8000 cargo
+add Don 2000 2500 cargo
+add Amur 4000 5000 cruise
+signals
+move Volga 0 0
+move Neva 3 4
+move Ob 6 8
+move Baltica 0 -7
+move Lena 10 0
+move Don 100 100
+sos 1 Volga
+signals
+nearest 1
+signals
+sos 2 Neva
+nearest 2
+nearest 1
+move Don 1 1
+nearest 1
+close 1
+signals
+exit

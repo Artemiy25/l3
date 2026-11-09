@@ -1,0 +1,14 @@
+add Volga 12000 15000 cargo
+add Baltica 50000 62000 tanker
+save build/ships.data
+remove Volga
+add Neva 3000 4500 cruise
+view
+load build/ships.data
+view
+load build/no_such_file.data
+load test/broken.data
+load test/broken_type.data
+view
+save no_such_dir/ships.data
+exit

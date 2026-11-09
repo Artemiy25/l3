@@ -1,0 +1,9 @@
+add Volga 12000 15000 cargo
+add Neva 3000 4500 cruise
+remove Neva
+remove Neva
+remove Titanic
+view
+remove Volga
+view
+exit
