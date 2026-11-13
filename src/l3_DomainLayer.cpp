@@ -1,6 +1,3 @@
-/// @file l3_DomainLayer.cpp
-/// Уровень предметной области (DL): суда, координаты, сигналы бедствия и службы.
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -10,16 +7,12 @@
 #include "hw/l3_DomainLayer.h"
 #include "hw/l4_InfrastructureLayer.h"
 
-/// Перевести строку в целое число.
-/// @return false, если строка - не целое число (например "abc" или "5x")
 static bool parseInt(const std::string & text, int & value)
 {
     std::istringstream in(text);
     in >> value;
     return !in.fail() && in.eof();
 }
-
-// ---------------------------------------------------------------- Тип судна и тоннаж
 
 bool parseShipType(const std::string & code, ShipType & type)
 {
@@ -54,11 +47,8 @@ std::string shipTypeName(ShipType type)
 
 bool isShipDataCorrect(int dryTonnage, int fullTonnage)
 {
-    // Полный тоннаж включает сухой, поэтому не может быть меньше него
     return dryTonnage > 0 && fullTonnage >= dryTonnage;
 }
-
-// ---------------------------------------------------------------- Position
 
 Position::Position(int x, int y)
     : _x(x)
@@ -78,7 +68,6 @@ int Position::getY() const
 
 double Position::distanceTo(const Position & other) const
 {
-    // Считаем в double, чтобы не было переполнения при больших координатах
     double dx = static_cast<double>(_x) - other._x;
     double dy = static_cast<double>(_y) - other._y;
     return std::sqrt(dx * dx + dy * dy);
@@ -91,8 +80,6 @@ std::string Position::toString() const
     return text.str();
 }
 
-// ---------------------------------------------------------------- Ship
-
 Ship::Ship(const std::string & name, int dryTonnage, int fullTonnage, ShipType type)
     : _name(name)
     , _dryTonnage(dryTonnage)
@@ -100,8 +87,6 @@ Ship::Ship(const std::string & name, int dryTonnage, int fullTonnage, ShipType t
     , _type(type)
     , _hasPosition(false)
 {
-    // Данные проверяются на операционном уровне до создания судна.
-    // Если сюда пришли неправильные данные - это ошибка в программе.
     assert(invariant());
 }
 
@@ -152,8 +137,6 @@ bool Ship::invariant() const
     return !_name.empty() && isShipDataCorrect(_dryTonnage, _fullTonnage);
 }
 
-// ---------------------------------------------------------------- ShipRegistry
-
 bool ShipRegistry::addShip(const Ship & ship)
 {
     if (_ships.count(ship.getName()) > 0)
@@ -175,7 +158,6 @@ bool ShipRegistry::updateShip(const Ship & ship)
 
 bool ShipRegistry::removeShip(const std::string & name)
 {
-    // erase возвращает, сколько элементов удалено (0 или 1)
     return _ships.erase(name) > 0;
 }
 
@@ -195,8 +177,6 @@ const std::map<std::string, Ship> & ShipRegistry::getShips() const
 
 bool ShipRegistry::saveToFile(const std::string & filename) const
 {
-    // Каждое судно - одна строка: <наименование> <сухой тоннаж> <полный тоннаж> <тип> [<x> <y>]
-    // Координаты пишутся, только если они известны, поэтому файлы из ЛР1 тоже читаются.
     std::vector<std::string> lines;
     for (auto it = _ships.begin(); it != _ships.end(); ++it)
     {
@@ -210,7 +190,6 @@ bool ShipRegistry::saveToFile(const std::string & filename) const
         lines.push_back(line.str());
     }
 
-    // Сама запись в файл - задача инфраструктурного уровня
     FileStorage storage;
     return storage.saveLines(filename, lines);
 }
@@ -222,8 +201,6 @@ bool ShipRegistry::loadFromFile(const std::string & filename)
     if (!storage.loadLines(filename, lines))
         return false;
 
-    // Сначала читаем суда во временный список. Если в файле есть ошибка,
-    // текущий список останется таким, каким был.
     std::map<std::string, Ship> loaded;
 
     for (const std::string & line : lines)
@@ -237,14 +214,13 @@ bool ShipRegistry::loadFromFile(const std::string & filename)
 
         words >> name;
         if (name.empty())
-            continue;   // пустая строка
+            continue;
 
         words >> dryTonnage >> fullTonnage >> typeCode;
         if (words.fail() || !isShipDataCorrect(dryTonnage, fullTonnage)
             || !parseShipType(typeCode, type))
             return false;
 
-        // Координаты необязательны: либо их нет совсем, либо есть оба числа
         std::vector<std::string> rest;
         std::string word;
         while (words >> word)
@@ -268,8 +244,6 @@ bool ShipRegistry::loadFromFile(const std::string & filename)
     return true;
 }
 
-// ================================================================ Сигналы бедствия (ЛР2)
-
 std::string getStatusName(SignalStatus status)
 {
     if (status == SignalStatus::Received)
@@ -278,8 +252,6 @@ std::string getStatusName(SignalStatus status)
         return "спасатели назначены";
     return "завершён";
 }
-
-// ---------------------------------------------------------------- DistressCall
 
 DistressCall::DistressCall(int number, const std::string & ship, const Position & position)
     : _number(number)
@@ -358,11 +330,9 @@ bool DistressCall::isRescuersCorrect(const std::vector<Rescuer> & rescuers) cons
 
     for (size_t i = 0; i < rescuers.size(); i++)
     {
-        // Судно не может спасать само себя, расстояние не может быть отрицательным
         if (rescuers[i].ship == _ship || rescuers[i].distance < 0)
             return false;
 
-        // Одно судно не назначается дважды
         for (size_t j = 0; j < i; j++)
         {
             if (rescuers[j].ship == rescuers[i].ship)
@@ -376,8 +346,6 @@ bool DistressCall::invariant() const
 {
     return _number > 0 && !_ship.empty() && isRescuersCorrect(_rescuers);
 }
-
-// ---------------------------------------------------------------- SignalLog
 
 bool SignalLog::addSignal(const DistressCall & signal)
 {
@@ -413,8 +381,6 @@ const std::map<int, DistressCall> & SignalLog::getSignals() const
     return _signals;
 }
 
-// ---------------------------------------------------------------- Службы
-
 std::vector<Rescuer> findNearestShips(const ShipRegistry & registry, const Position & position,
                                       const std::vector<std::string> & excluded, int count)
 {
@@ -425,7 +391,7 @@ std::vector<Rescuer> findNearestShips(const ShipRegistry & registry, const Posit
     {
         const Ship & ship = it->second;
         if (!ship.hasPosition())
-            continue;   // где судно - неизвестно, послать его на помощь нельзя
+            continue;
         if (std::find(excluded.begin(), excluded.end(), ship.getName()) != excluded.end())
             continue;
 
@@ -433,8 +399,6 @@ std::vector<Rescuer> findNearestShips(const ShipRegistry & registry, const Posit
         candidates.push_back(rescuer);
     }
 
-    // Сортируем по расстоянию, при равном расстоянии - по наименованию,
-    // чтобы результат не зависел от случая
     std::sort(candidates.begin(), candidates.end(),
               [](const Rescuer & a, const Rescuer & b) {
                   if (a.distance != b.distance)
@@ -454,7 +418,6 @@ std::string assignRescuers(DistressCall & signal, const ShipRegistry & registry,
     if (signal.getStatus() == SignalStatus::Closed)
         return "сигнал уже закрыт";
 
-    // Не рассматриваем само судно и суда, которые сами терпят бедствие
     std::vector<std::string> excluded;
     excluded.push_back(signal.getShip());
 

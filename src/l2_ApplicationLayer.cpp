@@ -1,22 +1,15 @@
-/// @file l2_ApplicationLayer.cpp
-/// Операционный уровень (AL): выполнение команд пользователя.
-
 #include <iomanip>
 #include <sstream>
 
 #include "hw/l2_ApplicationLayer.h"
 
-/// Перевести строку в целое число.
-/// @return false, если строка - не целое число (например "abc" или "5x")
 static bool toInt(const std::string & text, int & value)
 {
     std::istringstream in(text);
     in >> value;
-    // Число должно прочитаться, и после него в строке ничего не должно остаться
     return !in.fail() && in.eof();
 }
 
-/// Номер сигнала в виде текста: "№5"
 static std::string numberText(int number)
 {
     std::ostringstream text;
@@ -24,7 +17,6 @@ static std::string numberText(int number)
     return text.str();
 }
 
-/// Расстояние в виде текста с одним знаком после запятой: "5.0 миль"
 static std::string distanceText(double distance)
 {
     std::ostringstream text;
@@ -69,7 +61,6 @@ std::string Application::execute(const std::vector<std::string> & args)
     return "Неизвестная команда '" + command + "'\n";
 }
 
-// add <наименование> <сухой тоннаж> <полный тоннаж> <тип>
 std::string Application::add(const std::vector<std::string> & args)
 {
     if (args.size() != 5)
@@ -95,7 +86,6 @@ std::string Application::add(const std::vector<std::string> & args)
     return "Судно '" + name + "' добавлено\n";
 }
 
-// remove <наименование>
 std::string Application::remove(const std::vector<std::string> & args)
 {
     if (args.size() != 2)
@@ -109,8 +99,6 @@ std::string Application::remove(const std::vector<std::string> & args)
     return "Судно '" + name + "' удалено\n";
 }
 
-// update <наименование> <сухой тоннаж> <полный тоннаж>
-// Тип судна и координаты не меняются.
 std::string Application::update(const std::vector<std::string> & args)
 {
     if (args.size() != 4)
@@ -139,7 +127,6 @@ std::string Application::update(const std::vector<std::string> & args)
     return "Судно '" + name + "' изменено\n";
 }
 
-// view
 std::string Application::view()
 {
     const std::map<std::string, Ship> & ships = _registry.getShips();
@@ -156,7 +143,6 @@ std::string Application::view()
         out << ship.getName() << " | тип: " << shipTypeName(ship.getType())
             << " | сухой тоннаж: " << ship.getDryTonnage() << " т"
             << " | полный тоннаж: " << ship.getFullTonnage() << " т";
-        // Координаты (ЛР2) показываем, только если они известны
         if (ship.hasPosition())
             out << " | координаты: " << ship.getPosition().toString();
         out << "\n";
@@ -164,7 +150,6 @@ std::string Application::view()
     return out.str();
 }
 
-// save <файл>
 std::string Application::save(const std::vector<std::string> & args)
 {
     if (args.size() != 2)
@@ -176,7 +161,6 @@ std::string Application::save(const std::vector<std::string> & args)
     return "Список судов сохранён в файл " + args[1] + "\n";
 }
 
-// load <файл>
 std::string Application::load(const std::vector<std::string> & args)
 {
     if (args.size() != 2)
@@ -188,9 +172,6 @@ std::string Application::load(const std::vector<std::string> & args)
     return "Список судов загружен из файла " + args[1] + "\n";
 }
 
-// ---------------------------------------------------------------- Координаты и сигналы (ЛР2)
-
-// move <наименование> <x> <y> - задать координаты судна
 std::string Application::move(const std::vector<std::string> & args)
 {
     if (args.size() != 4)
@@ -213,7 +194,6 @@ std::string Application::move(const std::vector<std::string> & args)
     return "Судно '" + name + "' находится в точке " + position.toString() + "\n";
 }
 
-// sos <номер сигнала> <наименование судна> - судно терпит бедствие
 std::string Application::sos(const std::vector<std::string> & args)
 {
     if (args.size() != 3)
@@ -235,7 +215,6 @@ std::string Application::sos(const std::vector<std::string> & args)
     if (active != nullptr)
         return "Ошибка: судно '" + name + "' уже подало сигнал " + numberText(active->getNumber()) + "\n";
 
-    // Координаты бедствия запоминаются на момент подачи сигнала
     if (!_signals.addSignal(DistressCall(number, name, ship->getPosition())))
         return "Ошибка: сигнал " + numberText(number) + " уже есть\n";
 
@@ -243,7 +222,6 @@ std::string Application::sos(const std::vector<std::string> & args)
          + ship->getPosition().toString() + "\n";
 }
 
-// nearest <номер сигнала> - найти три ближайших судна и назначить их на помощь
 std::string Application::nearest(const std::vector<std::string> & args)
 {
     if (args.size() != 2)
@@ -257,7 +235,6 @@ std::string Application::nearest(const std::vector<std::string> & args)
     if (signal == nullptr)
         return "Ошибка: сигнал " + numberText(number) + " не найден\n";
 
-    // Поиск и назначение выполняет служба предметной области
     std::string error = assignRescuers(*signal, _registry, _signals);
     if (error != "")
         return "Ошибка: не удалось назначить спасателей по сигналу " + numberText(number) + ": " + error + "\n";
@@ -277,7 +254,6 @@ std::string Application::nearest(const std::vector<std::string> & args)
     return out.str();
 }
 
-// close <номер сигнала> - спасение завершено
 std::string Application::close(const std::vector<std::string> & args)
 {
     if (args.size() != 2)
@@ -297,7 +273,6 @@ std::string Application::close(const std::vector<std::string> & args)
     return "Спасение по сигналу " + numberText(number) + " завершено\n";
 }
 
-// signals - показать все сигналы SOS
 std::string Application::signals()
 {
     const std::map<int, DistressCall> & all_signals = _signals.getSignals();

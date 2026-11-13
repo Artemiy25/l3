@@ -1,13 +1,9 @@
-/// @file l4_InfrastructureLayer.cpp
-/// Инфраструктурный уровень (IL): чтение и запись текстовых файлов.
-
 #include <fstream>
 
 #include "hw/l4_InfrastructureLayer.h"
 
 bool FileStorage::saveLines(const std::string & filename, const std::vector<std::string> & lines)
 {
-    // Идиома RAII: файл закроется сам, когда переменная file выйдет из функции
     std::ofstream file(filename);
     if (!file)
         return false;

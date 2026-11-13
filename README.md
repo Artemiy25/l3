@@ -126,6 +126,10 @@ nearest {signal}
 - Документация: `<ссылка на GitLab Pages>`
 - Покрытие: `<ссылка на GitLab Pages>/coverage`
 
+Документация: https://github.com/Artemiy25/l3
+
+Тесты: https://github.com/Artemiy25/l3/tree/main/test
+
 ## Выводы
 
 1. Реализован генератор нагрузочных тестов, который настраивается шаблонами команд и сценариями
